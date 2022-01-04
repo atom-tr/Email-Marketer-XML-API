@@ -37,10 +37,10 @@ under the title of ‘XML Username’ and ‘XML Token’ respectively
 1. Add Subscriber to a List
 
 	details (Required):
-		- listid (int) -- The list that the contact is located within. (Required)
-		- email (string) -- The email address of the contact being added. (Required)
-		- format (string) -– The format of the email campaigns that this contact prefers to receive (html or h or text or t) (defaults to text)
-		- confirmed (int) -- Sets the confirmation status of the subscriber to confirmed or not (yes or y or true or 1) (Not required, default to unconfirmed)
-		- customfields (array)
-			- customfields[].fieldid (int) -– The id of the custom field being added.
-			- customfields[].data (string) -– The value to be added to this custom field.
+	- listid (int) -- The list that the contact is located within. (Required)
+	- email (string) -- The email address of the contact being added. (Required)
+	- format (string) -– The format of the email campaigns that this contact prefers to receive (html or h or text or t) (defaults to text)
+	- confirmed (int) -- Sets the confirmation status of the subscriber to confirmed or not (yes or y or true or 1) (Not required, default to unconfirmed)
+	- customfields (array)
+    	- customfields[].fieldid (int) -– The id of the custom field being added.
+    	- customfields[].data (string) -– The value to be added to this custom field.
