@@ -90,7 +90,7 @@ class API():
     def iserror(self, e):
         return { 'issuccess': False, 'status': e.find('status').text, 'message': e.find('errormessage').text }
     
-    def email_format(f): return { 'h': 'HTML', 't': 'Text', }[f]
+    def email_format(f): return { 'h': 'HTML', 't': 'Text', 'b': 'TextAndHTML'}[f]
     
     def xml_format(self, type, method, data = ""):
         xml = '''
