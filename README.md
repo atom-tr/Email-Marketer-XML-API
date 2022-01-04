@@ -22,7 +22,8 @@ Authentication Requirements:
 > An XML POST request with the details for the license to be generated should be sent to the ‘XML Path’
 that you can find in the ‘User Accounts -> Edit User’ section of Interspire Email Marketer under the ‘User
 Permissions’ tab. Make sure that you have ‘Enable the XML API’ checked and saved. The XML Path will
-look similar to the following: `http://www.yourdomain.com/IEM/xml.php` <br>
+look similar to the following: `http://www.yourdomain.com/IEM/xml.php`  
+
 > The ‘username’ and ‘usertoken’ mentioned in the following examples can be found in this same section
 under the title of ‘XML Username’ and ‘XML Token’ respectively
 
