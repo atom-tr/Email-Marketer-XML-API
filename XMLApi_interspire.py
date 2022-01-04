@@ -85,14 +85,10 @@ class API():
     
     def get_url(self): return self.url
     
-    def issuccess(self, e):
-        status = e.find('status').text
-        if status == 'SUCCESS': return True
-        else: return False
+    def issuccess(self, e): return True if e.find('status').text == 'SUCCESS' else False
+
     def iserror(self, e):
-        status = e.find('status').text
-        message =  e.find('errormessage').text
-        return { 'issuccess': False, 'status': status, 'message': message }
+        return { 'issuccess': False, 'status': e.find('status').text, 'message': e.find('errormessage').text }
     
     def email_format(f): return { 'h': 'HTML', 't': 'Text', }[f]
     
