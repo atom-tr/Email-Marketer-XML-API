@@ -34,6 +34,10 @@ under the title of ‘XML Username’ and ‘XML Token’ respectively
 
 ### Possible Requests
 
+#### Check Token Works
+
+> Check if user is authenticated: `api.is_authenticated()`
+
 #### Add Subscriber to a List
 
 details (Required):
@@ -47,7 +51,25 @@ details (Required):
   - customfields[].data (string) -– The value to be added to this custom field.
 
 ```python
-try = api.add_subscribers(listid=1, 'abc@abc.abc', format='html', confirmed=1, customfields=[{'fieldid':1, 'data':'abc'}, {'fieldid':2, 'data':'def'}])
+try = api.add_subscriber(list_id=1, 'abc@abc.abc', format='html', confirmed=1, customfields=[{'fieldid':1, 'data':'abc'}, {'fieldid':2, 'data':'def'}])
 if try['issuccess']: print(try['id'])
+else: print(try['message'])
+```
+
+#### Delete Subscriber
+
+```python
+try = api.delete_subscriber(list_id=1, 'abc@abc.abc')
+if try['issuccess']: print("Done")
+else: print(try['message'])
+```
+
+#### Get Custom Field Data
+
+```python
+try = api.get_customfields(list_id=1)
+if try['issuccess']:
+  for field in try['CustomFields']:
+    print(field)
 else: print(try['message'])
 ```
