@@ -3,7 +3,7 @@ import requests
 
 import xml.etree.cElementTree as ElementTree
 import xml.etree.ElementTree as ET
-from pprint import pprint
+# from pprint import pprint
 
 # from requests.models import Response
 
@@ -80,21 +80,24 @@ class API():
         self.user = username
         self.token = usertoken
     
+    def __str__(self) -> str:
+        pass
+    
     def get_url(self): return self.url
     
     def email_format(f): return { 'h': 'HTML', 't': 'Text', }[f]
     
     def xml_format(self, type, method, data = ""):
         xml = '''
-            <xmlrequest>
-                <username>{}</username>
-                <usertoken>{}</usertoken>
-                <requesttype>{}</requesttype>
-                <requestmethod>{}</requestmethod>
-                <details>
-                    {}
-                </details>
-            </xmlrequest>
+        <xmlrequest>
+            <username>{}</username>
+            <usertoken>{}</usertoken>
+            <requesttype>{}</requesttype>
+            <requestmethod>{}</requestmethod>
+            <details>
+                {}
+            </details>
+        </xmlrequest>
         '''
         return xml.format(self.user, self.token, type, method, data)
     
@@ -119,8 +122,64 @@ class API():
             else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
         return response.raise_for_status()
         
+    def get_customfields(self, list_id):
+        """Get all custom fields for a list
+
+        Args:
+            list_id (int): id of list to get custom fields for
+
+        Returns:
+            CustomFields (List): List of custom fields
+        """
+        details = f'''<listids>{list_id}</listids>'''
+        xml = self.xml_format('lists', 'GetCustomFields', details)
+        response = requests.post(self.url, data=xml)
+        if response.status_code == 200:
+            e = ET.fromstring(response.text)
+            status = e.find('status').text
+            if status == 'SUCCESS':
+                data = XmlListConfig(ElementTree.fromstring(response.text))
+                for d in data:
+                    if isinstance(d, list): return { 'issuccess': True, 'CustomFields': d }
+            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
+            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+        return response.raise_for_status()
     # Subscriber
+    def check_contact_list(self, list_id, email):
+        """
+        Return ID of contact if email is in list
+        """
+        details = f'''
+        <emailaddress>{email}</emailaddress>
+        <listids>{list_id}</listids>
+        '''
+        xml = self.xml_format('subscribers', 'IsSubscriberOnList', details)
+        response = requests.post(self.url, data=xml)
+        if response.status_code == 200:
+            e = ET.fromstring(response.text)
+            status = e.find('status').text
+            if status == 'SUCCESS': return e.find('data').text
+            else: return False
+        else: return response.raise_for_status()
     
+    def is_contact_in_list(self, list_id, email):
+        """
+        Return ID of contact if email is in list 
+        """
+        return self.check_contact_list(list_id, email)
+    
+    def get_subscriber_id(self, list_id, email):
+        """[summary]
+        
+        Arguments:
+            list_id {int} -- id of list to check
+            email {str} -- email address to check
+        
+        Returns:
+            id {int} -- id of subscriber if found
+            False if not found
+        """
+        return self.check_contact_list(list_id, email)
     
     def get_subscribers(self, list_id, email = ''):
         """
@@ -140,10 +199,10 @@ class API():
                 + bool bounced: Whether the subscriber has bounced
         """
         details = '''
-            <searchinfo>
-            <List>{}</List>
-            <Email>{}</Email>
-            </searchinfo>
+        <searchinfo>
+        <List>{}</List>
+        <Email>{}</Email>
+        </searchinfo>
         '''.format(list_id, email)
         xml = self.xml_format('subscribers', 'GetSubscribers', details)
 
@@ -204,3 +263,22 @@ class API():
             elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
             else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
         else: return response.raise_for_status()
+        
+    def update_subscriber_custom_field(self, subscriber_id, field_id, data):
+        details = f'''
+        <subscriberids>
+          <id>{subscriber_id}</id>
+        </subscriberids>
+        <fieldid>{field_id}</fieldid>
+        <data>{data}</data>
+        '''
+        xml = self.xml_format('subscribers', 'SaveSubscriberCustomField', details)
+        response = requests.post(self.url, data=xml)
+        if response.status_code == 200:
+            e = ET.fromstring(response.text)
+            status = e.find('status').text
+            if status == 'SUCCESS': return { 'issuccess':  True, 'message': status }
+            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
+            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+        else: return response.raise_for_status()
+        
