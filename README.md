@@ -35,6 +35,7 @@ under the title of ‘XML Username’ and ‘XML Token’ respectively
 ### Possible Requests
 
 1. Add Subscriber to a List
+
 	details (Required)
 	- emailaddress – The email address of the contact being added. (Required)
 	- mailinglistid – The list that the contact is located within. (Required)
