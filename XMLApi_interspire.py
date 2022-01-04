@@ -223,7 +223,7 @@ class API():
             else: return self.iserror(e)
         else: return response.raise_for_status()
     
-    def add_subscribers(self, list_id, email, confirmed = True, format = 'html', custom_fields = {}):
+    def add_subscriber(self, list_id, email, confirmed = True, format = 'html', custom_fields = {}):
         details = f'''
         <emailaddress>{email}</emailaddress>
         <mailinglist>{list_id}</mailinglist>
