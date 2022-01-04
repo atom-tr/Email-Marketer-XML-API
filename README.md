@@ -34,13 +34,20 @@ under the title of ‘XML Username’ and ‘XML Token’ respectively
 
 ### Possible Requests
 
-1. Add Subscriber to a List
+#### Add Subscriber to a List
 
-	details (Required):
-	- listid (int) -- The list that the contact is located within. (Required)
-	- email (string) -- The email address of the contact being added. (Required)
-	- format (string) -– The format of the email campaigns that this contact prefers to receive (html or h or text or t) (defaults to text)
-	- confirmed (int) -- Sets the confirmation status of the subscriber to confirmed or not (yes or y or true or 1) (Not required, default to unconfirmed)
-	- customfields (array)
-    	- customfields[].fieldid (int) -– The id of the custom field being added.
-    	- customfields[].data (string) -– The value to be added to this custom field.
+details (Required):
+
+- listid (int) -- The list that the contact is located within. (Required)
+- email (string) -- The email address of the contact being added. (Required)
+- format (string) -– The format of the email campaigns that this contact prefers to receive (html or h or text or t) (defaults to text)
+- confirmed (int) -- Sets the confirmation status of the subscriber to confirmed or not (yes or y or true or 1) (Not required, default to unconfirmed)
+- customfields (array)	-- An array of custom field values to be set for the contact. (Not required)
+  - customfields[].fieldid (int) -– The id of the custom field being added.
+  - customfields[].data (string) -– The value to be added to this custom field.
+
+```python
+try = api.add_subscribers(listid=1, 'abc@abc.abc', format='html', confirmed=1, customfields=[{'fieldid':1, 'data':'abc'}, {'fieldid':2, 'data':'def'}])
+if try['issuccess']: print(try['id'])
+else: print(try['message'])
+```

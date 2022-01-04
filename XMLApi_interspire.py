@@ -85,6 +85,15 @@ class API():
     
     def get_url(self): return self.url
     
+    def issuccess(self, e):
+        status = e.find('status').text
+        if status == 'SUCCESS': return True
+        else: return False
+    def iserror(self, e):
+        status = e.find('status').text
+        message =  e.find('errormessage').text
+        return { 'issuccess': False, 'status': status, 'message': message }
+    
     def email_format(f): return { 'h': 'HTML', 't': 'Text', }[f]
     
     def xml_format(self, type, method, data = ""):
@@ -113,13 +122,11 @@ class API():
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS':
+            if self.issuccess(e):
                 data = XmlListConfig(ElementTree.fromstring(response.text))
                 for d in data:
                     if isinstance(d, list): return { 'issuccess': True, 'Lists': d }
-            elif status == 'ERROR': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+            else: return self.iserror(e)
         return response.raise_for_status()
         
     def get_customfields(self, list_id):
@@ -136,13 +143,11 @@ class API():
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS':
+            if self.issuccess(e):
                 data = XmlListConfig(ElementTree.fromstring(response.text))
                 for d in data:
                     if isinstance(d, list): return { 'issuccess': True, 'CustomFields': d }
-            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+            else: return self.iserror(e)
         return response.raise_for_status()
     # Subscriber
     def check_contact_list(self, list_id, email):
@@ -157,8 +162,7 @@ class API():
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS': return e.find('data').text
+            if self.issuccess(e): return e.find('data').text
             else: return False
         else: return response.raise_for_status()
     
@@ -210,8 +214,7 @@ class API():
         if response.status_code == 200:
             # xml to dictionary
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS':
+            if self.issuccess(e):
                 count = e.find('data').find('count').text
                 # subscribers list in data > items > item
                 data = XmlListConfig(e.find('data'))
@@ -220,12 +223,11 @@ class API():
                     if isinstance(item, dict):
                         subscribers = [ subitem for subitem in item['items']['item'] if isinstance(subitem, dict)]
                     else: continue   
-                return { 'issuccess':  True, 'status': status, 'count': count, 'subscribers': subscribers }
-            elif status == 'ERROR': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+                return { 'issuccess':  True,  'count': count, 'subscribers': subscribers }
+            else: return self.iserror(e)
         else: return response.raise_for_status()
     
-    def add_subscribers(self, list_id, email, confirmed = False, format = 'html', custom_fields = {}):
+    def add_subscribers(self, list_id, email, confirmed = True, format = 'html', custom_fields = {}):
         details = f'''
         <emailaddress>{email}</emailaddress>
         <mailinglist>{list_id}</mailinglist>
@@ -233,19 +235,17 @@ class API():
         <confirmed>{confirmed}</confirmed>
         <customfields>
         '''
-        details.join(f"<item><fieldid>{key}</fieldid><value>{value}</value></item>" for key, value in custom_fields.items())
-        details.join("</customfields>")
+        if custom_fields: details.join(f"<item><fieldid>{key}</fieldid><value>{value}</value></item>" for key, value in custom_fields.items())
+        
+        details += "</customfields>"
         xml = self.xml_format('subscribers', 'AddSubscriberToList', details)
         
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS':
-                # id = e.find('data').text
+            if self.issuccess(e):
                 return { 'issuccess':  True, 'id': e.find('data').text }
-            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+            else: return self.iserror(e)
             
         else: return response.raise_for_status()
         
@@ -258,10 +258,8 @@ class API():
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS': return { 'issuccess':  True, 'message': status }
-            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+            if self.issuccess(e): return { 'issuccess':  True }
+            else: return self.iserror(e)
         else: return response.raise_for_status()
         
     def update_subscriber_custom_field(self, subscriber_id, field_id, data):
@@ -276,9 +274,7 @@ class API():
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
             e = ET.fromstring(response.text)
-            status = e.find('status').text
-            if status == 'SUCCESS': return { 'issuccess':  True, 'message': status }
-            elif status == 'FAILED': return { 'issuccess':  False, 'message': e.find('errormessage').text }
-            else: return { 'issuccess':  False, 'status': status, 'message': 'Unknown error' }
+            if self.issuccess(e): return { 'issuccess':  True }
+            else: return self.iserror(e)
         else: return response.raise_for_status()
         
