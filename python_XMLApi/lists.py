@@ -1,4 +1,4 @@
-from XMLApi import *
+from .XMLApi import *
 
 class List_API(API):
     # List

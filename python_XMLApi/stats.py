@@ -1,6 +1,7 @@
-from XMLApi import *
+from .XMLApi import *
 
 class Stats_API(API):
+    
     def GetUserNewsletterStats(self, userid: int = 0):
         """[summary]
 
@@ -17,7 +18,7 @@ class Stats_API(API):
             if self.issuccess(e):
                 data = XmlListConfig(ElementTree.fromstring(response.text))
                 for d in data:
-                    if isinstance(d, list): return { 'issuccess': True, 'data': d }
+                    if isinstance(d, dict): return { 'issuccess': True, 'data': d }
             else: return self.iserror(e)
         return response.raise_for_status()
     
