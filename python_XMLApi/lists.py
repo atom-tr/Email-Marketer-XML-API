@@ -10,7 +10,7 @@ class List_API(API):
             if self.issuccess(e):
                 data = XmlListConfig(ElementTree.fromstring(response.text))
                 for d in data:
-                    if isinstance(d, list): return { 'issuccess': True, 'Lists': d }
+                    if isinstance(d, list): return { 'issuccess': True, 'data': d }
             else: return self.iserror(e)
         return response.raise_for_status()
         
@@ -31,6 +31,6 @@ class List_API(API):
             if self.issuccess(e):
                 data = XmlListConfig(ElementTree.fromstring(response.text))
                 for d in data:
-                    if isinstance(d, list): return { 'issuccess': True, 'CustomFields': d }
+                    if isinstance(d, list): return { 'issuccess': True, 'data': d }
             else: return self.iserror(e)
         return response.raise_for_status()

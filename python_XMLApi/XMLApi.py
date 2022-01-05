@@ -1,4 +1,16 @@
-# 
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+# This has the Base API class in it.
+# Sets up the database object for use.
+# API base on iem v6.2.0
+
+@author: thai.tv
+@email: sys-sgn@netnam.vn
+@status: InProgress
+@link: https://github.com/atom-tr/Email-Marketer-XML-API
+"""
+
 import requests
 
 import xml.etree.cElementTree as ElementTree

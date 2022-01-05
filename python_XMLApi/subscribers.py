@@ -76,7 +76,7 @@ class Subscribers_API(API):
                     if isinstance(item, dict):
                         subscribers = [ subitem for subitem in item['items']['item'] if isinstance(subitem, dict)]
                     else: continue   
-                return { 'issuccess':  True,  'count': count, 'subscribers': subscribers }
+                return { 'issuccess':  True,  'count': count, 'data': subscribers }
             else: return self.iserror(e)
         else: return response.raise_for_status()
     
@@ -131,7 +131,7 @@ class Subscribers_API(API):
                 if self.issuccess(e):
                     data = XmlListConfig(ElementTree.fromstring(response.text))
                     for d in data:
-                        if isinstance(d, list): return { 'issuccess': True, 'CustomFields': d }
+                        if isinstance(d, list): return { 'issuccess': True, 'data': d }
                 else: return self.iserror(e)
             return response.raise_for_status()
         else: return { 'issuccess': False, 'message': 'Email not found in list' }
