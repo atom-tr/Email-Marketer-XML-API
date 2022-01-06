@@ -1,8 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+# This has the Base API class in it.
+# Sets up the database object for use.
+# API base on iem v6.2.0
+
+@package API
+@subpackage List_API
+
+@author: thai.tv (thai.tv@netnam.vn)
+@email: sys-sgn@netnam.vn
+@status: InProgress
+@link: https://github.com/atom-tr/Email-Marketer-XML-API
+"""
+
 from .XMLApi import *
 
 class List_API(API):
     # List
-    def get_lists(self):
+    def get_lists(self) -> dict:
         xml = self.xml_format('user', 'GetLists')
         response = requests.post(self.url, data=xml)
         if response.status_code == 200:
@@ -14,7 +30,7 @@ class List_API(API):
             else: return self.iserror(e)
         return response.raise_for_status()
         
-    def get_customfields(self, list_id: int):
+    def get_customfields(self, list_id: int) -> dict:
         """Get all custom fields for a list
 
         Args:
@@ -29,8 +45,9 @@ class List_API(API):
         if response.status_code == 200:
             e = ET.fromstring(response.text)
             if self.issuccess(e):
-                data = XmlListConfig(ElementTree.fromstring(response.text))
-                for d in data:
+                for d in self.Xmlstring2ListConfig(response.text):
                     if isinstance(d, list): return { 'issuccess': True, 'data': d }
             else: return self.iserror(e)
         return response.raise_for_status()
+    
+    

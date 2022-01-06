@@ -1,8 +1,24 @@
-from XMLApi import *
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+# This has the Base API class in it.
+# Sets up the database object for use.
+# API base on iem v6.2.0
+
+@package API
+@subpackage Subscribers_API
+
+@author: thai.tv (thai.tv@netnam.vn)
+@email: sys-sgn@netnam.vn
+@status: InProgress
+@link: https://github.com/atom-tr/Email-Marketer-XML-API
+"""
+
+from .XMLApi import *
 
 class Subscribers_API(API):
     # Subscriber
-    def check_contact_list(self, list_id: int, email: str):
+    def check_contact_list(self, list_id: int, email: str) -> int:
         """
         Return ID of contact if email is in list
         """
@@ -18,13 +34,13 @@ class Subscribers_API(API):
             else: return False
         else: return response.raise_for_status()
     
-    def is_contact_in_list(self, list_id: int, email: str):
+    def is_contact_in_list(self, list_id: int, email: str) -> int:
         """
         Return ID of contact if email is in list 
         """
         return self.check_contact_list(list_id, email)
     
-    def get_Subscriber_id(self, list_id: int, email: str):
+    def get_Subscriber_id(self, list_id: int, email: str) -> int:
         """[summary]
         
         Arguments:
@@ -38,7 +54,7 @@ class Subscribers_API(API):
         return self.check_contact_list(list_id, email)
     
     
-    def get_Subscribers(self, list_id: int, email = ''):
+    def get_Subscribers(self, list_id: int, email = '') -> dict:
         """
         Search for subscribers in a list.
         Input:
@@ -80,7 +96,7 @@ class Subscribers_API(API):
             else: return self.iserror(e)
         else: return response.raise_for_status()
     
-    def add_Subscriber(self, list_id: int, email: str, confirmed = True, format = 'html', custom_fields = {}):
+    def add_Subscriber(self, list_id: int, email: str, confirmed = True, format = 'html', custom_fields = {}) -> dict:
         details = f'''
         <emailaddress>{email}</emailaddress>
         <mailinglist>{list_id}</mailinglist>
@@ -102,7 +118,7 @@ class Subscribers_API(API):
             
         else: return response.raise_for_status()
         
-    def delete_Subscriber(self, list_id: int, email: str):
+    def delete_Subscriber(self, list_id: int, email: str) -> dict:
         details = f'''
         <list>{list_id}</list>
         <emailaddress>{email}</emailaddress>
@@ -116,7 +132,7 @@ class Subscribers_API(API):
         else: return response.raise_for_status()
        
     
-    def get_Subscriber_CustomFields(self, list_id: int, email: str):
+    def get_Subscriber_CustomFields(self, list_id: int, email: str) -> dict:
         # check if email is in list
         id = self.get_Subscriber_id(list_id, email)
         if id:
@@ -129,14 +145,13 @@ class Subscribers_API(API):
             if response.status_code == 200:
                 e = ET.fromstring(response.text)
                 if self.issuccess(e):
-                    data = XmlListConfig(ElementTree.fromstring(response.text))
-                    for d in data:
+                    for d in self.Xmlstring2ListConfig(response.text):
                         if isinstance(d, list): return { 'issuccess': True, 'data': d }
                 else: return self.iserror(e)
             return response.raise_for_status()
         else: return { 'issuccess': False, 'message': 'Email not found in list' }
         
-    def update_Subscriber_custom_field(self, subscriber_id: int, field_id: int, data):
+    def update_Subscriber_custom_field(self, subscriber_id: int, field_id: int, data) -> dict:
         details = f'''
         <subscriberids>
           <id>{subscriber_id}</id>

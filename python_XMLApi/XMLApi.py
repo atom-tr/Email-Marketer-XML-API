@@ -5,7 +5,7 @@
 # Sets up the database object for use.
 # API base on iem v6.2.0
 
-@author: thai.tv
+@author: thai.tv (thai.tv@netnam.vn)
 @email: sys-sgn@netnam.vn
 @status: InProgress
 @link: https://github.com/atom-tr/Email-Marketer-XML-API
@@ -117,6 +117,8 @@ class API():
         </xmlrequest>
         '''
         return xml.format(self.user, self.token, type, method, data)
+    
+    def Xmlstring2ListConfig(self, str): return XmlListConfig(ElementTree.fromstring(str))
     
     def is_authenticated(self): 
         response = requests.post(self.url, data=self.xml_format('authentication', 'xmlapitest'))
