@@ -121,10 +121,28 @@ class API():
     def Xmlstring2ListConfig(self, str): return XmlListConfig(ElementTree.fromstring(str))
     
     def is_authenticated(self): 
+        """
+        Check if user is authenticated
+        """
         response = requests.post(self.url, data=self.xml_format('authentication', 'xmlapitest'))
         if response.status_code == 200:
             if response.text.find('<status>SUCCESS</status>') != -1: return True
             else: return False
+        else: return response.raise_for_status()
+    
+    def get_userid(self) -> int:
+        """Get current user id
+
+        Returns:
+            int: id of current user
+        """
+        response = requests.post(self.url, data=self.xml_format('authentication', 'xmlapitest'))
+        if response.status_code == 200:
+            e = ET.fromstring(response.text)
+            if self.issuccess(e): 
+                for i in self.Xmlstring2ListConfig(response.text):
+                    if isinstance(i, dict): return i['user']['userid']
+            else: return self.iserror(e)
         else: return response.raise_for_status()
     
     
