@@ -98,11 +98,10 @@ class API():
     def get_url(self): return self.url
     
     def issuccess(self, e): return True if e.find('status').text == 'SUCCESS' else False
-
-    def iserror(self, e):
-        return { 'issuccess': False, 'status': e.find('status').text, 'message': e.find('errormessage').text }
+    def iserror(self, e): return { 'issuccess': False, 'status': e.find('status').text, 'message': e.find('errormessage').text }
     
     def email_format(f): return { 'h': 'HTML', 't': 'Text', 'b': 'TextAndHTML'}[f]
+    def GetJobStatus(s): return { 'c': 'Job Complete', 'i': 'Job InProgress', 'p': 'Job Paused', 'w': 'Job Waiting', 'r': 'Job Resend'}[s]
     
     def xml_format(self, type, method, data = ""):
         xml = '''

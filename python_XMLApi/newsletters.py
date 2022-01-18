@@ -16,6 +16,7 @@
 
 
 # Import the required library
+import time
 from lxml import html, etree
 from requests.models import Response
 from .XMLApi import *
@@ -109,60 +110,152 @@ class Newsletters_API(API):
     
 class Campaign(Newsletters_API):
     
-        campaignid = None
-        def setup(self, **kwargs):
-            self.ownerid = kwargs.get('ownerid', self.get_userid())
-            self.name = kwargs.get('name', '')
-            self.subject = kwargs.get('subject', '')
-            self.textbody = kwargs.get('textbody', '')
-            self.htmlbody = kwargs.get('htmlbody', '')
-            self.active = kwargs.get('active', 1)
-            self.archive = kwargs.get('archive', 1)
-            self.format = kwargs.get('format', 'h')
-            
-        def set_owner(self, ownerid: int): self.ownerid = ownerid
-        def set_name(self, name: str): self.name = name
-        def set_subject(self, subject: str): self.subject = subject
-        def set_textbody(self, textbody: str): self.textbody = textbody
-        def set_htmlbody(self, htmlbody: str ): self.htmlbody = htmlbody
+        # Define all the variables for a campaign
+        campaign = dict.fromkeys( ["campaignid", "ownerid", "name", "subject", "textbody", "htmlbody", ], None )
+        campaign.update({  "active": 1, "archive": 1, "format": "h", })
         
+        def setup_campaign(self, **kwargs):
+            self.campaign.update(kwargs)
+            self.campaign['ownerid'] = kwargs.get('ownerid', self.get_userid())
+            # self.name = kwargs.get('name', '')
+            # self.subject = kwargs.get('subject', '')
+            # self.textbody = kwargs.get('textbody', '')
+            # self.htmlbody = kwargs.get('htmlbody', '')
+            # self.active = kwargs.get('active', 1)
+            # self.archive = kwargs.get('archive', 1)
+            # self.format = kwargs.get('format', 'h')
+        
+        def is_campaign_ready(self):
+            """Check if the campaign is ready to be created"""
+            if self.campaign['name'] and self.campaign['subject'] and self.campaign['textbody'] and self.campaign['htmlbody']:
+                return True
+            else: return False
+            
         def create(self):
+            """Create a campaign with the setup_campaign function
+
+            Returns:
+                campaignid [int]: ID of the created campaign
+            """
+            if not self.is_campaign_ready(): return { 'issuccess': False, 'message': 'Campaign is not ready' }
             
+            # Create XML for API calling
             details = f'''
-            <ownerid>{self.ownerid}</ownerid>
-            <name>{self.name}</name>
-            <format>{self.format}</format>
-            <active>{self.active}</active>
-            <archive>{self.archive}</archive>
-            <subject>{self.subject}</subject>
+            <ownerid>{self.campaign['ownerid']}</ownerid>
+            <name>{self.campaign['name']}</name>
+            <format>{self.campaign['format']}</format>
+            <active>{self.campaign['active']}</active>
+            <archive>{self.campaign['archive']}</archive>
+            <subject>{self.campaign['subject']}</subject>
             '''
-            if not any([self.textbody, self.htmlbody]): return { 'issuccess': False, 'message': 'No body' }
+            # Check if body is html or text aready set
+            if not any([self.campaign['textbody'], self.campaign['htmlbody']]): return { 'issuccess': False, 'message': 'No body' }
             
-            if self.textbody: details += f'''<textbody><![CDATA[{self.textbody}]]></textbody>'''
-            if self.htmlbody: details += '''<htmlbody><![CDATA[{}]]></htmlbody>'''.format(self.htmlbody.encode('ascii', 'xmlcharrefreplace').decode("utf-8") )
+            if self.campaign['textbody']: details += f'''<textbody><![CDATA[{self.campaign['textbody']}]]></textbody>'''
+            if self.campaign['htmlbody']: details += '''<htmlbody><![CDATA[{}]]></htmlbody>'''.format(self.campaign['htmlbody'].encode('ascii', 'xmlcharrefreplace').decode("utf-8") )
             xml = self.xml_format('newsletters', 'Create', details)
             # return xml
             response = requests.post(self.url, data=xml)
             if response.status_code == 200:
                 e = ET.fromstring(response.text)
                 if self.issuccess(e):
-                    self.campaignid = e.find('data').text
-                    return { 'issuccess': True, 'data': self.campaignid}
+                    self.campaign['campaignid'] = e.find('data').text
+                    return { 'issuccess': True, 'data': self.campaign['campaignid']}
                 else: return self.iserror(e)
             return response.raise_for_status()
         
-        def send(self, fktype = 'newsletter', fkid: int = campaignid, lists: int = 0, when = 0):
+        # define all the methods for sending a campaign
+        job = dict.fromkeys( ["SendFromName", "SendFromEmail", "ReplyToEmail", "BounceEmail", ], None )
+        job.update(dict.fromkeys([ "Multipart", "TrackOpens", "TrackLinks", "NotifyOwner"], 1))
+        job.update({ "EmbedImages": 0, "Charset": 'UTF-8',})
+        
+        def setup_job(self, **kwargs): self.job.update(kwargs)
+            # self.fromname = kwargs.get('fromname', '')
+            # self.fromemail = kwargs.get('fromemail', '')
+            # self.replyemail = kwargs.get('replyemail', '')
+            # self.bounceemail = kwargs.get('bounceemail', '')
+        
+        def is_job_ready(self):
+            """Check if the job is ready to be created"""
+            if self.job['SendFromName'] and self.job['SendFromEmail'] and self.job['ReplyToEmail'] and self.job['BounceEmail']: return True
+            else: return False
             
-            details = f'''
+        def send(self, fktype = 'newsletter', fkid: int = 0, lists: list = [0], when = 0):
+            """ Create a job for sending a campaign
+            
+            Required:
+                fktype [str]: Type of the foreign key. Can be 'newsletter' or 'campaign'
+                fkid [int]: ID of the campaign
+                lists [list]: List of list to send to
+                when [timestamp]: When to send the campaign. Can be 0 (now), or at a specific time 
+                details: {
+                    NewsletterChosen (int): id campaign
+                    Lists (list): id lists
+                    SendCriteria (array): {
+                        Confirmed (bool): 1
+                        CustomFields (array): {}
+                        List (list): id list
+                        Status (int): a
+                    }
+                    Multipart (bool): 1
+                    TrackOpens (bool): 1
+                    TrackLinks (bool): 1
+                    EmbedImages (bool): 0
+                    Newsletter (int): id newsletter
+                    SendFromName (string): Name of sender
+                    SendFromEmail (string): Email of sender
+                    ReplyToEmail (string): Email to reply
+                    BounceEmail (string): Email which really send the email
+                    Charset (string): utf-8
+                    NotifyOwner (bool): 1
+                    SendStartTime (timestamp): 0 
+                }
+            """
+            
+            if not self.is_job_ready(): return { 'issuccess': False, 'message': 'Campaign not ready' }
+            
+            if fkid == 0 and self.campaign['campaignid']: fkid = self.campaign['campaignid']
+            # Create XML for API calling
+            lists_xml = ''.join("<Lists>{}</Lists>\n".format(i) for i in lists)
+            list_xml = ''.join("<List>{}</List>\n".format(i) for i in lists)
+            
+            if when == 0: when = int(time.time())
+            
+            details_xml = f'''
             <jobtype>send</jobtype>
             <when>{when}</when>
-            <ownerid>{self.ownerid}</ownerid>
+            <ownerid>{self.campaign['ownerid']}</ownerid>
+            <approved>{self.campaign['ownerid']}</approved>
             <fktype>{fktype}</fktype>
             <fkid>{fkid}</fkid>
-            <lists>{lists}</lists>
+            {lists_xml.lower()}
+            <details>
+                <NewsletterChosen>{fkid}</NewsletterChosen>
+                {lists_xml}
+                <SendCriteria>
+                    <Confirmed>1</Confirmed>
+                    <CustomFields></CustomFields>
+                    {list_xml}
+                    <Status>a</Status>
+                </SendCriteria>
+                <Multipart>{self.job['Multipart']}</Multipart>
+                <TrackOpens>{self.job['TrackOpens']}</TrackOpens>
+                <TrackLinks>{self.job['TrackLinks']}</TrackLinks>
+                <EmbedImages>{self.job['EmbedImages']}</EmbedImages>
+                <Newsletter>{fkid}</Newsletter>
+                <SendFromName>{self.job['SendFromName']}</SendFromName>
+                <SendFromEmail>{self.job['SendFromEmail']}</SendFromEmail>
+                <ReplyToEmail>{self.job['ReplyToEmail']}</ReplyToEmail>
+                <BounceEmail>{self.job['BounceEmail']}</BounceEmail>
+                <Charset>{self.job['Charset']}</Charset>
+                <NotifyOwner>{self.job['NotifyOwner']}</NotifyOwner>
+                <SendStartTime>{when}</SendStartTime>
+            </details>
             '''
-            xml = self.xml_format('jobs', 'Create', details)
+            xml = self.xml_format('jobs', 'Create', details_xml)
+            # Send request
             response = requests.post(self.url, data=xml)
+            # Check response
             if response.status_code == 200:
                 e = ET.fromstring(response.text)
                 if self.issuccess(e):
